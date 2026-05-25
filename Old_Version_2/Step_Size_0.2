@@ -1,0 +1,146 @@
+// ==UserScript==
+// @name         Step Size ⭐
+// @namespace    http://tampermonkey.net/
+// @version      0.2
+// @description  ブログ編集画面で緻密な文字サイズ指定を可能にする
+// @author       Ameba Blog User
+// @match        https://blog.ameba.jp/ucs/entry/srventry*
+// @exclude      https://blog.ameba.jp/ucs/entry/srventrylist.do*
+// @grant        none
+// ==/UserScript==
+
+
+let retry=0;
+let interval=setInterval(wait_target, 100);
+function wait_target(){
+    retry++;
+    if(retry>10){ // リトライ制限 10回 1sec
+        clearInterval(interval); }
+    let target=document.getElementById('cke_1_contents'); // 監視 target
+    if(target){
+        clearInterval(interval);
+        main(); }}
+
+
+function main(){
+
+    let target=document.getElementById('cke_1_contents'); // 監視 target
+    let monitor=new MutationObserver(flex_edit);
+    monitor.observe(target, {childList: true}); // ショートカット待受け開始
+
+    flex_edit();
+
+    function flex_edit(){
+        let editor_iframe;
+        let iframe_doc;
+        let selection;
+        let range;
+        let clone;
+        let tags;
+        let insert_node;
+
+        editor_iframe=document.querySelector('.cke_wysiwyg_frame');
+        if(editor_iframe){
+            iframe_doc=editor_iframe.contentWindow.document;
+            if(iframe_doc){
+                iframe_doc.addEventListener('keydown', check_key);
+                document.addEventListener('keydown', check_key);
+
+                function check_key(event){
+                    if(event.altKey && event.keyCode==38){
+
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        if(check_tag()==0){
+                            first(event.altKey, event.keyCode); }
+                        else if(check_tag()==1){
+                            more(event.altKey, event.keyCode); }}
+
+                    if(event.altKey && event.keyCode==40){
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        if(check_tag()==0){
+                            first(event.altKey, event.keyCode); }
+                        else if(check_tag()==1){
+                            more(event.altKey, event.keyCode); }}
+
+                    if(event.ctrlKey && event.keyCode==38){
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        if(check_tag()==0){
+                            first(event.ctrlKey, event.keyCode); }
+                        else if(check_tag()==1){
+                            more(event.ctrlKey, event.keyCode); }}
+
+                    if(event.ctrlKey && event.keyCode==40){
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        if(check_tag()==0){
+                            first(event.ctrlKey, event.keyCode); }
+                        else if(check_tag()==1){
+                            more(event.ctrlKey, event.keyCode); }}
+
+                    if(event.altKey && event.keyCode==37){ //「Alt+⇦」を無効化
+                        event.preventDefault(); }
+
+                    function check_tag(){
+                        selection=iframe_doc.getSelection();
+                        range=selection.getRangeAt(0);
+                        clone=selection.getRangeAt(0).cloneContents();
+                        tags=clone.querySelectorAll(
+                            'span, p, a, b, br, div, em, h1, h2, h3, h4, i, img, s');
+                        if(range.collapsed){
+                            return -1; } // 選択範囲が無い時は動作しない
+                        else{
+                            return tags.length; }}
+
+                } // check_key()
+
+
+                function first(ac, key){
+                    insert_node=document.createElement('span');
+                    if(ac==event.altKey){
+                        if(key==38){
+                            insert_node.setAttribute('style', 'font-size:1.1em'); }
+                        else if(key==40){
+                            insert_node.setAttribute('style', 'font-size:0.9em'); }}
+                    else if(ac==event.ctrlKey){
+                        if(key==38){
+                            insert_node.setAttribute('style', 'font-size:1.1em;'+
+                                                     'line-height:0;background:transparent;'); }
+                        else if(key==40){
+                            insert_node.setAttribute('style', 'font-size:0.9em;'+
+                                                     'line-height:0;background:transparent;'); }}
+
+                    insert_node.textContent=clone;
+                    try{
+                        range.surroundContents(insert_node); }
+                    catch(e){;}}
+
+
+                function more(ac, key){
+                    let style=clone.querySelector('span').style;
+                    let size_raw=style.getPropertyValue('font-size');
+
+                    if(size_raw.indexOf('em')!=-1 && size_raw.indexOf('rem')==-1){
+                        let size=parseFloat(size_raw.replace(/[^0-9\.]/g, ''));
+                        if(key==38 && size<3){
+                            size=Math.round((size+0.1)*10)/10; }
+                        else if(key==40 && size>0.3){
+                            size=Math.round((size-0.1)*10)/10; }
+                        let size_css;
+                        if(ac==event.altKey){
+                            size_css='font-size:' +size+ 'em'; }
+                        else if(ac==event.ctrlKey){
+                            size_css='font-size:' +size+ 'em;'+
+                                'line-height:0;background:transparent;'; }
+
+                        insert_node=document.createElement('span');
+                        insert_node.setAttribute('style', size_css);
+                        insert_node.textContent=range.toString();
+                        try{
+                            range.deleteContents();
+                            range.insertNode(insert_node); }
+                        catch(e){;}}}
+
+            }}}} // main()
