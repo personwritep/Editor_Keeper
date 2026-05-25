@@ -1,0 +1,234 @@
+// ==UserScript==
+// @name         Step Size ⭐
+// @namespace    http://tampermonkey.net/
+// @version      0.5
+// @description  ブログ編集画面で緻密な文字サイズ指定を可能にする
+// @author       Ameba Blog User
+// @match        https://blog.ameba.jp/ucs/entry/srventry*
+// @exclude      https://blog.ameba.jp/ucs/entry/srventrylist.do*
+// @grant        none
+// ==/UserScript==
+
+
+let retry=0;
+let interval=setInterval(wait_target, 100);
+function wait_target(){
+    retry++;
+    if(retry>10){ // リトライ制限 10回 1sec
+        clearInterval(interval); }
+    let target=document.getElementById('cke_1_contents'); // 監視 target
+    if(target){
+        clearInterval(interval);
+        main(); }}
+
+
+function main(){
+    let ua_n=2; // Chromeの場合
+    let agent=window.navigator.userAgent.toLowerCase();
+    if(agent.indexOf('firefox') > -1){ ua_n=3; } // Firefoxの場合
+
+
+    let target=document.getElementById('cke_1_contents'); // 監視 target
+    let monitor=new MutationObserver(flex_edit);
+    monitor.observe(target, {childList: true}); // ショートカット待受け開始
+
+    flex_edit();
+
+    function flex_edit(){
+        let editor_iframe;
+        let iframe_doc;
+        let selection;
+        let range;
+        let clone;
+        let tags;
+        let insert_node;
+
+        editor_iframe=document.querySelector('.cke_wysiwyg_frame');
+        if(editor_iframe){
+            iframe_doc=editor_iframe.contentWindow.document;
+            if(iframe_doc){
+                iframe_doc.addEventListener('keydown', block_key);
+                document.addEventListener('keydown', block_key);
+
+                function block_key(event){
+                    if(event.altKey && event.keyCode==37){ //「Alt+⇦」を無効化
+                        event.preventDefault(); }}
+
+
+                iframe_doc.addEventListener('keydown', check_key);
+                document.addEventListener('keydown', check_key);
+
+                function check_key(event){
+                    //    disp_tag(); // 取得range状態のチェック用 ●
+
+                    if(event.altKey && event.keyCode==38){
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        if(check_tag()==0){
+                            first(event.altKey, event.keyCode); }
+                        else if(check_tag()==1){
+                            more(event.altKey, event.keyCode); }
+                        else if(check_tag()==ua_n){
+                            more2(event.altKey, event.keyCode); }}
+
+                    if(event.altKey && event.keyCode==40){
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        if(check_tag()==0){
+                            first(event.altKey, event.keyCode); }
+                        else if(check_tag()==1){
+                            more(event.altKey, event.keyCode); }
+                        else if(check_tag()==ua_n){
+                            more2(event.altKey, event.keyCode); }}
+
+                    if(event.ctrlKey && event.keyCode==38){
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        if(check_tag()==0){
+                            first(event.ctrlKey, event.keyCode); }
+                        else if(check_tag()==1){
+                            more(event.ctrlKey, event.keyCode); }
+                        else if(check_tag()==ua_n){
+                            more2(event.ctrlKey, event.keyCode); }}
+
+                    if(event.ctrlKey && event.keyCode==40){
+                        event.preventDefault();
+                        event.stopImmediatePropagation();
+                        if(check_tag()==0){
+                            first(event.ctrlKey, event.keyCode); }
+                        else if(check_tag()==1){
+                            more(event.ctrlKey, event.keyCode); }
+                        else if(check_tag()==ua_n){
+                            more2(event.ctrlKey, event.keyCode); }}
+
+                    function check_tag(){
+                        selection=iframe_doc.getSelection();
+                        range=selection.getRangeAt(0);
+                        clone=selection.getRangeAt(0).cloneContents();
+                        tags=clone.querySelectorAll(
+                            'span, p, a, b, br, div, em, h1, h2, h3, h4, i, img, s');
+                        if(range.collapsed){
+                            return -1; } // 選択範囲が無い時は動作しない
+                        else{
+                            return tags.length; }}
+
+                    //    function disp_tag(){ // 取得range状態のチェック用 ●
+                    //        let box=document.querySelector('#cke_8');
+                    //        box.style.font="bold 16px/30px Meiryo";
+                    //        box.innerHTML=check_tag(); }
+
+                } // check_key()
+
+
+                function first(ac, key){
+                    insert_node=iframe_doc.createElement('span');
+                    if(ac==event.altKey){
+                        if(key==38){
+                            insert_node.setAttribute('style', 'font-size:1.1em'); }
+                        else if(key==40){
+                            insert_node.setAttribute('style', 'font-size:0.9em'); }}
+                    else if(ac==event.ctrlKey){
+                        if(key==38){
+                            insert_node.setAttribute('style', 'font-size:1.1em;'+
+                                                     'line-height:0;background:transparent;'); }
+                        else if(key==40){
+                            insert_node.setAttribute('style', 'font-size:0.9em;'+
+                                                     'line-height:0;background:transparent;'); }}
+
+                    insert_node.textContent=range.toString();
+                    try{
+                        range.surroundContents(insert_node);
+                        disp_tag(insert_node); }
+                    catch(e){;}}
+
+
+                function more(ac, key){
+                    let span=clone.querySelector('span');
+                    if(span){
+                        let size_raw=span.style.getPropertyValue('font-size');
+                        if(size_raw.indexOf('em')!=-1 && size_raw.indexOf('rem')==-1){
+                            let size=parseFloat(size_raw.replace(/[^0-9\.]/g, ''));
+                            if(key==38 && size<3){
+                                size=Math.round((size+0.1)*10)/10; }
+                            else if(key==40 && size>0.3){
+                                size=Math.round((size-0.1)*10)/10; }
+                            let size_css;
+                            if(ac==event.altKey){
+                                size_css='font-size:' +size+ 'em'; }
+                            else if(ac==event.ctrlKey){
+                                size_css='font-size:' +size+ 'em;'+
+                                    'line-height:0;background:transparent;'; }
+
+                            insert_node=iframe_doc.createElement('span');
+                            insert_node.setAttribute('style', size_css);
+                            insert_node.textContent=range.toString();
+                            try{
+                                range.deleteContents();
+                                range.insertNode(insert_node);
+                                disp_tag(insert_node); }
+                            catch(e){;}}}
+
+                    let br=clone.querySelector('br');
+                    if(br){
+                        more2(ac, key); }}
+
+
+                function more2(ac, key){
+                    if(range.startContainer.nodeType==Node.TEXT_NODE){
+                        let latter=range.startContainer.splitText(range.startOffset);
+                        range.setStartBefore(latter);
+                        range.setEndAfter(latter);
+
+                        insert_node=iframe_doc.createElement('span');
+                        if(ac==event.altKey){
+                            if(key==38){
+                                insert_node.setAttribute('style', 'font-size:1.1em'); }
+                            else if(key==40){
+                                insert_node.setAttribute('style', 'font-size:0.9em'); }}
+                        else if(ac==event.ctrlKey){
+                            if(key==38){
+                                insert_node.setAttribute('style', 'font-size:1.1em;'+
+                                                         'line-height:0;background:transparent;'); }
+                            else if(key==40){
+                                insert_node.setAttribute('style', 'font-size:0.9em;'+
+                                                         'line-height:0;background:transparent;'); }}
+
+                        insert_node.textContent=range.toString();
+                        try{
+                            range.surroundContents(insert_node);
+                            disp_tag(insert_node); }
+                        catch(e){;}}}
+
+
+                function disp_tag(inserted_node){
+                    let lineheight;
+                    if(inserted_node.style.lineHeight=='0'){
+                        lineheight='♦' }
+                    else{
+                        lineheight='　' }
+                    let size=inserted_node.style.fontSize;
+
+                    let cke_lavel;
+                    if(ua_n==3){
+                        cke_lavel=document.querySelector('#cke_6_text'); }
+                    else{
+                        cke_lavel=document.querySelector('#cke_7_text'); }
+
+                    cke_lavel.textContent=lineheight + size;
+                    cke_lavel.removeAttribute('id');
+                    cke_lavel.parentNode.style.background='#2196f3';
+                    cke_lavel.style.color='#fff';
+
+                    setTimeout(()=>{
+                        if(ua_n==3){
+                            cke_lavel.parentNode.style.background='';
+                            cke_lavel.style.color='';
+                            cke_lavel.setAttribute('id', 'cke_6_text'); }
+                        else{
+                            cke_lavel.parentNode.style.background='';
+                            cke_lavel.style.color='';
+                            cke_lavel.setAttribute('id', 'cke_7_text'); }
+                    }, 500); }
+
+
+            }}}} // main()
