@@ -1,0 +1,74 @@
+// ==UserScript==
+// @name         Editor Keeper ⭐📛
+// @namespace    http://tampermonkey.net/
+// @version      1.2
+// @description  編集画面を閉じず移動する
+// @author        Ameblo Writer User
+// @match        https://blog.ameba.jp/ucs/entry/srventry*
+// @exclude      https://blog.ameba.jp/ucs/entry/srventrylist.do*
+// @grant         none
+// ==/UserScript==
+
+
+let retry=0;
+let interval=setInterval(wait_target, 100);
+function wait_target(){
+    retry++;
+    if(retry>10){ // リトライ制限 10回 1sec
+        clearInterval(interval); }
+    let target=document.querySelector('.l-gHeaderLeft__link a'); // 監視 target
+    if(target){
+        clearInterval(interval);
+        main(); }}
+
+function main(){
+    let target=document.querySelector('.l-gHeaderLeft__link a');
+    target.setAttribute('target', '_blank');
+
+    target.onclick=function(){
+        if(event.shiftKey){
+            event.preventDefault();
+            let amebaId=document.querySelector('.amebaId').textContent;
+            if(amebaId){
+                let blogurl='https://ameblo.jp/' + amebaId + '/';
+                window.open(blogurl, "_blank"); }}}
+
+    let ua=0; // Chromeの場合のフラグ
+    let agent=window.navigator.userAgent.toLowerCase();
+    if(agent.indexOf('firefox') > -1){ ua=1; } // Firefoxの場合のフラグ
+    if(agent.indexOf('edg') > -1){ ua=2; } // NEdgeの場合のフラグ
+
+    // 以下 起動表示CSSを適用 📛
+    let css;
+    if(ua==0){
+        css=
+            '.l-gHeaderLeft__link a:before { content: "" !important; }'+
+            '.l-gHeaderLeft__link a:after { content: "⏏" !important; font-size: 24px !important; '+
+            'line-height: 16px !important; top: 2px !important; left: 6px !important; }'+
+            '.l-gHeaderLeft__link a { text-indent: -6.3em !important; height: 31px !important; padding-top: 3px; }'+
+            '.l-gHeaderLeft__link a:hover { text-indent: 0.4em !important; background: #fff !important; '+
+            'width: calc(28px + 6.7em) !important; box-shadow: -10px 0 1px 0 var(--bgc1) !important; } '+
+            '#globalHeader #gHeaderLeft { width: 280px; }'; }
+    if(ua==1){
+        css=
+            '.l-gHeaderLeft__link a:before { content: "" !important; }'+
+            '.l-gHeaderLeft__link a:after { content: "⏏" !important; font-size: 24px !important; '+
+            'line-height: 16px !important; top: 3px !important; left: 6px !important; }'+
+            '.l-gHeaderLeft__link a { text-indent: -6em !important; height: 30px !important; padding-top: 4px; }'+
+            '.l-gHeaderLeft__link a:hover { text-indent: 0.7em !important; background: #fff !important; '+
+            'width: calc(28px + 6.7em) !important; box-shadow: -10px 0 1px 0 var(--bgc1) !important; } '+
+            '#globalHeader #gHeaderLeft { width: 280px; }'; }
+    if(ua==2){
+        css=
+            '.l-gHeaderLeft__link a:before { content: "" !important; }'+
+            '.l-gHeaderLeft__link a:after { content: "⏏" !important; font-size: 16px !important; '+
+            'line-height: 23px !important; top: 1px !important; left: 7px !important; }'+
+            '.l-gHeaderLeft__link a { text-indent: -6.3em !important; height: 31px !important; padding-top: 3px; }'+
+            '.l-gHeaderLeft__link a:hover { text-indent: 0.4em !important; background: #fff !important; '+
+            'width: calc(28px + 6.7em) !important; box-shadow: -10px 0 1px 0 var(--bgc1) !important; } '+
+            '#globalHeader #gHeaderLeft { width: 280px; }'; }
+
+    let style_tag=document.createElement("style"); // css設定styleタグ
+    style_tag.type="text/css";
+    style_tag.appendChild(document.createTextNode(css));
+    document.querySelector('.l-body').appendChild(style_tag); }
