@@ -1,11 +1,11 @@
 // ==UserScript==
 // @name        Editor Keeper ⭐📛
 // @namespace        http://tampermonkey.net/
-// @version        4.9
+// @version        5.0
 // @description        編集画面を閉じず「管理トップ」「ブログトップ」に移動する
 // @author        Ameblo Writer User
-// @match        https://blog.ameba.jp/ucs/entry/srventry*
-// @exclude        https://blog.ameba.jp/ucs/entry/srventrylist.do*
+// @match        https://blog.ameba.jp/ucs/entry/srventryinsertinput.do*
+// @match        https://blog.ameba.jp/ucs/entry/srventryupdateinput.do*
 // @icon        https://www.google.com/s2/favicons?sz=64&domain=ameblo.jp
 // @grant        none
 // @updateURL        https://github.com/personwritep/Editor_Keeper/raw/main/Editor_Keeper.user.js
@@ -876,5 +876,3 @@ function photo_list(){
                 EKI.remove(); }}}
 
 } // photo_list()
-
-
