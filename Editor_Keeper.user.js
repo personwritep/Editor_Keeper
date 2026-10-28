@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Editor Keeper ⭐📛
 // @namespace        http://tampermonkey.net/
-// @version        5.0
+// @version        5.1
 // @description        編集画面を閉じず「管理トップ」「ブログトップ」に移動する
 // @author        Ameblo Writer User
 // @match        https://blog.ameba.jp/ucs/entry/srventryinsertinput.do*
@@ -101,7 +101,8 @@ function button_disp(){
 
 function keeper(){
     let target=document.querySelector('.l-gHeaderLeft__link a');
-    target.setAttribute('target', '_blank');
+    if(target){
+        target.setAttribute('target', '_blank'); }
 
     target.onclick=function(event){
         if(event.shiftKey){
@@ -116,43 +117,29 @@ function keeper(){
             window.open(homeurl, "_blank"); }}
 
 
-    jump_disp(window);
+    let target_b=document.querySelector('.l-gHeaderLeft__link a > b');
+    if(target_b){
+        window.addEventListener('keydown', function(event){
+            if(event.shiftKey==true){
+                target_b.textContent='ブログトップ';
+                target.style.boxShadow='#00e2ff -14px 0 0 0 inset'; }
+            else if(event.ctrlKey==true){
+                target_b.textContent='ホームを表示';
+                target.style.boxShadow='#00e2ff -14px 0 0 0 inset'; }});
+
+        window.addEventListener('keyup', function(){
+            target_b.textContent='管理トップへ';
+            target.style.boxShadow='#79fbf6 -14px 0 0 0 inset'; }); }
 
 
-    let target0=document.querySelector('#cke_1_contents');
-    if(target0){
-        let monitor0=new MutationObserver(wh);
-        monitor0.observe(target0, {childList: true}); }
+    target.addEventListener('mouseenter', function(event){
+        window.focus(); });
 
-    wh();
-
-    function wh(){
-        let editor_iframe=document.querySelector('.cke_wysiwyg_frame');
-        if(editor_iframe){ // iframe読込みが実行条件
-            let iframe_doc=editor_iframe.contentWindow.document;
-            jump_disp(iframe_doc); }}
-
-
-    function jump_disp(env){
-        let target_b=target.querySelector('b');
-        if(target_b){
-            env.addEventListener('keydown', function(event){
-                if(event.shiftKey==true){
-                    target_b.textContent='ブログトップ';
-                    target.style.boxShadow='#00e2ff -14px 0 0 0 inset';
-                    env.addEventListener('keyup', function(){
-                        target_b.textContent='管理トップへ';
-                        target.style.boxShadow='#79fbf6 -14px 0 0 0 inset'; }); }
-                else if(event.ctrlKey==true){
-                    target_b.textContent='ホームを表示';
-                    target.style.boxShadow='#00e2ff -14px 0 0 0 inset';
-                    env.addEventListener('keyup', function(){
-                        target_b.textContent='管理トップへ';
-                        target.style.boxShadow='#79fbf6 -14px 0 0 0 inset'; }); }}); }}
 
 
     window.addEventListener('dragover', function(event){ // 編集画面へのドロップ制限
         event.preventDefault(); }, false);
+
     window.addEventListener('drop', function(event){
         event.preventDefault();
         event.stopPropagation(); }, false);
