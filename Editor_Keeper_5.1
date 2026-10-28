@@ -24,8 +24,8 @@ function wait_target(){
     retry++;
     if(retry>10){ // リトライ制限 10回 1sec
         clearInterval(interval); }
-    let target=document.querySelector('.l-gHeaderLeft__link a'); // 監視 target
-    if(target){
+    let m_button=document.querySelector('.l-gHeaderLeft__link a'); // 監視 target
+    if(m_button){
         clearInterval(interval);
         button_disp();
         keeper();
@@ -77,10 +77,10 @@ function button_disp(){
     document.querySelector('.l-body').insertAdjacentHTML('beforeend', style);
 
 
-    let target=document.querySelector('.l-gHeaderLeft__link a');
-    if(target){
-        target.innerHTML='<b class="jump_to">管理トップへ</b>'+ home_svg;
-        target.style.boxShadow='#79fbf6 -14px 0 0 0 inset';
+    let m_button=document.querySelector('.l-gHeaderLeft__link a');
+    if(m_button){
+        m_button.innerHTML='<b class="jump_to">管理トップへ</b>'+ home_svg;
+        m_button.style.boxShadow='#79fbf6 -14px 0 0 0 inset';
 
         setTimeout(()=>{
             let count=0;
@@ -91,7 +91,7 @@ function button_disp(){
                     count+=1; }}
 
             let disp='<p class="js_count">'+ count +'</p>';
-            target.insertAdjacentHTML('beforeend', disp);
+            m_button.insertAdjacentHTML('beforeend', disp);
         }, 2000); // 2sec後にスクリプトツールの起動数を表示
     }
 
@@ -100,11 +100,11 @@ function button_disp(){
 
 
 function keeper(){
-    let target=document.querySelector('.l-gHeaderLeft__link a');
-    if(target){
-        target.setAttribute('target', '_blank'); }
+    let m_button=document.querySelector('.l-gHeaderLeft__link a');
+    if(m_button){
+        m_button.setAttribute('m_button', '_blank'); }
 
-    target.onclick=function(event){
+    m_button.onclick=function(event){
         if(event.shiftKey){
             event.preventDefault();
             let amebaId=document.querySelector('.amebaId').textContent;
@@ -117,24 +117,22 @@ function keeper(){
             window.open(homeurl, "_blank"); }}
 
 
-    let target_b=document.querySelector('.l-gHeaderLeft__link a > b');
-    if(target_b){
+    let m_button_b=document.querySelector('.l-gHeaderLeft__link a > b');
+    if(m_button_b){
         window.addEventListener('keydown', function(event){
             if(event.shiftKey==true){
-                target_b.textContent='ブログトップ';
-                target.style.boxShadow='#00e2ff -14px 0 0 0 inset'; }
+                m_button_b.textContent='ブログトップ';
+                m_button.style.boxShadow='#00e2ff -14px 0 0 0 inset'; }
             else if(event.ctrlKey==true){
-                target_b.textContent='ホームを表示';
-                target.style.boxShadow='#00e2ff -14px 0 0 0 inset'; }});
+                m_button_b.textContent='ホームを表示';
+                m_button.style.boxShadow='#00e2ff -14px 0 0 0 inset'; }});
 
         window.addEventListener('keyup', function(){
-            target_b.textContent='管理トップへ';
-            target.style.boxShadow='#79fbf6 -14px 0 0 0 inset'; }); }
+            m_button_b.textContent='管理トップへ';
+            m_button.style.boxShadow='#79fbf6 -14px 0 0 0 inset'; }); }
 
-
-    target.addEventListener('mouseenter', function(event){
+    m_button.addEventListener('mouseenter', function(event){
         window.focus(); });
-
 
 
     window.addEventListener('dragover', function(event){ // 編集画面へのドロップ制限
