@@ -102,7 +102,7 @@ function button_disp(){
 function keeper(){
     let m_button=document.querySelector('.l-gHeaderLeft__link a');
     if(m_button){
-        m_button.setAttribute('m_button', '_blank'); }
+        m_button.setAttribute('target', '_blank'); }
 
     m_button.onclick=function(event){
         if(event.shiftKey){
