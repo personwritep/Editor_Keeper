@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Editor Keeper ⭐📛
 // @namespace        http://tampermonkey.net/
-// @version        5.1
+// @version        5.2
 // @description        編集画面を閉じず「管理トップ」「ブログトップ」に移動する
 // @author        Ameblo Writer User
 // @match        https://blog.ameba.jp/ucs/entry/srventryinsertinput.do*
@@ -58,7 +58,8 @@ function button_disp(){
         '.l-gHeaderLeft__link a:before { content: "" !important; } '+
         '.l-gHeaderLeft__link a:after { content: "" !important; } '+
         '.l-gHeaderLeft__link a { text-indent: -6.3em !important; } '+
-        '.l-gHeaderLeft__link a:hover { '+
+        '.l-gHeaderLeft__link a:focus { outline: none !important; } '+
+        '.l-gHeaderLeft__link a:hover { transition-delay: 0s !important; '+
         'text-indent: 0.4em !important; width: calc(28px + 6.7em) !important; '+
         'background: #fff !important; box-shadow: -10px 0 1px 0 var(--bgc1) !important; } '+
         '#globalHeader #gHeaderLeft { width: 280px; } '+
@@ -105,16 +106,41 @@ function keeper(){
         m_button.setAttribute('target', '_blank'); }
 
     m_button.onclick=function(event){
+
+        let openFocusNewTab=(url)=>{
+            let a=document.createElement('a');
+            a.href=url;
+            a.target='_blank';
+            let fakeCombinedClickEvent=new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                ctrlKey: true,
+                shiftKey: true
+                //  , metaKey: true // Macユーザー向けは追加
+            });
+
+            a.dispatchEvent(fakeCombinedClickEvent); };
+
+
         if(event.shiftKey){
             event.preventDefault();
             let amebaId=document.querySelector('.amebaId').textContent;
             if(amebaId){
                 let blogurl='https://ameblo.jp/' + amebaId + '/';
-                window.open(blogurl, "_blank"); }}
+                openFocusNewTab(blogurl); }}
         else if(event.ctrlKey){
             event.preventDefault();
             let homeurl='https://www.ameba.jp/home';
-            window.open(homeurl, "_blank"); }}
+            openFocusNewTab(homeurl); }
+
+
+        setTimeout(()=>{
+            m_button_b.textContent='管理トップへ';
+            m_button.style.boxShadow='#79fbf6 -14px 0 0 0 inset';
+        }, 500);
+
+    } // m_button.onclick
+
 
 
     let m_button_b=document.querySelector('.l-gHeaderLeft__link a > b');
@@ -131,7 +157,8 @@ function keeper(){
             m_button_b.textContent='管理トップへ';
             m_button.style.boxShadow='#79fbf6 -14px 0 0 0 inset'; }); }
 
-    m_button.addEventListener('mouseenter', function(event){
+
+    m_button.addEventListener('mouseover', function(event){
         window.focus(); });
 
 
@@ -522,49 +549,21 @@ function step_size(){
         if(editor_iframe){
             iframe_doc=editor_iframe.contentWindow.document;
             if(iframe_doc){
-                iframe_doc.addEventListener('keydown', block_key);
-                document.addEventListener('keydown', block_key);
-
-                function block_key(event){
-                    if(event.altKey && event.keyCode==37){ //「Alt+⇦」を無効化
-                        event.preventDefault(); }}
-
-
                 iframe_doc.addEventListener('keydown', check_key);
                 document.addEventListener('keydown', check_key);
 
                 function check_key(event){
                     //    disp_tag(); // 取得range状態のチェック用 ●
 
-                    if(event.ctrlKey && event.keyCode==13){ //「Ctrl+Enter」
-                        event.preventDefault();
-                        if(check_tag()==0){
-                            creat_super(); }
-                        else if(check_tag()==1){
-                            more(event.ctrlKey, event.keyCode); }}
-
-                    else{
-                        if(event.altKey && event.keyCode==38){ //「Alt+⇧」
+                    if(event.ctrlKey){
+                        if(event.keyCode==13){ //「Ctrl+Enter」
                             event.preventDefault();
-                            event.stopImmediatePropagation();
                             if(check_tag()==0){
-                                first(event.altKey, event.keyCode); }
+                                creat_super(); }
                             else if(check_tag()==1){
-                                more(event.altKey, event.keyCode); }
-                            else if(check_tag()==ua_n){
-                                more2(event.altKey, event.keyCode); }}
+                                more(event.ctrlKey, event.keyCode); }}
 
-                        if(event.altKey && event.keyCode==40){ //「Alt+⇩」
-                            event.preventDefault();
-                            event.stopImmediatePropagation();
-                            if(check_tag()==0){
-                                first(event.altKey, event.keyCode); }
-                            else if(check_tag()==1){
-                                more(event.altKey, event.keyCode); }
-                            else if(check_tag()==ua_n){
-                                more2(event.altKey, event.keyCode); }}
-
-                        if(event.ctrlKey && event.keyCode==38){ //「Ctrl+⇧」
+                        else if(event.keyCode==38){ //「Ctrl+⇧」
                             event.preventDefault();
                             event.stopImmediatePropagation();
                             if(check_tag()==0){
@@ -574,7 +573,7 @@ function step_size(){
                             else if(check_tag()==ua_n){
                                 more2(event.ctrlKey, event.keyCode); }}
 
-                        if(event.ctrlKey && event.keyCode==40){ //「Ctrl+⇩」
+                        else if(event.keyCode==40){ //「Ctrl+⇩」
                             event.preventDefault();
                             event.stopImmediatePropagation();
                             if(check_tag()==0){
@@ -583,6 +582,30 @@ function step_size(){
                                 more(event.ctrlKey, event.keyCode); }
                             else if(check_tag()==ua_n){
                                 more2(event.ctrlKey, event.keyCode); }}}
+
+                    else if(event.altKey){
+                        if(event.keyCode==37){ //「Alt+⇦」を無効化
+                            event.preventDefault(); }
+
+                        else if(event.keyCode==38){ //「Alt+⇧」
+                            event.preventDefault();
+                            event.stopImmediatePropagation();
+                            if(check_tag()==0){
+                                first(event.altKey, event.keyCode); }
+                            else if(check_tag()==1){
+                                more(event.altKey, event.keyCode); }
+                            else if(check_tag()==ua_n){
+                                more2(event.altKey, event.keyCode); }}
+
+                        else if(event.keyCode==40){ //「Alt+⇩」
+                            event.preventDefault();
+                            event.stopImmediatePropagation();
+                            if(check_tag()==0){
+                                first(event.altKey, event.keyCode); }
+                            else if(check_tag()==1){
+                                more(event.altKey, event.keyCode); }
+                            else if(check_tag()==ua_n){
+                                more2(event.altKey, event.keyCode); }}}
 
 
                     function check_tag(){
