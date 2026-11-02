@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Editor Keeper ⭐📛
 // @namespace        http://tampermonkey.net/
-// @version        5.2
+// @version        5.3
 // @description        編集画面を閉じず「管理トップ」「ブログトップ」に移動する
 // @author        Ameblo Writer User
 // @match        https://blog.ameba.jp/ucs/entry/srventryinsertinput.do*
@@ -17,6 +17,9 @@ let ua=0; // Chrome・Edge の場合のフラグ
 let agent=window.navigator.userAgent.toLowerCase();
 if(agent.indexOf('firefox') > -1){ ua=1; } // Firefoxの場合のフラグ
 
+let c_size=Symbol();
+let k_left=Symbol();
+let s_size=Symbol();
 
 let retry=0;
 let interval=setInterval(wait_target, 100);
@@ -32,8 +35,7 @@ function wait_target(){
         environ();
         keep_left();
         step_size();
-        photo_list();
-    }}
+        photo_list(); }}
 
 
 
@@ -145,7 +147,7 @@ function keeper(){
 
     let m_button_b=document.querySelector('.l-gHeaderLeft__link a > b');
     if(m_button_b){
-        window.addEventListener('keydown', function(event){
+        document.addEventListener('keydown', function(event){
             if(event.shiftKey==true){
                 m_button_b.textContent='ブログトップ';
                 m_button.style.boxShadow='#00e2ff -14px 0 0 0 inset'; }
@@ -153,7 +155,7 @@ function keeper(){
                 m_button_b.textContent='ホームを表示';
                 m_button.style.boxShadow='#00e2ff -14px 0 0 0 inset'; }});
 
-        window.addEventListener('keyup', function(){
+        document.addEventListener('keyup', function(){
             m_button_b.textContent='管理トップへ';
             m_button.style.boxShadow='#79fbf6 -14px 0 0 0 inset'; }); }
 
@@ -162,14 +164,16 @@ function keeper(){
         window.focus(); });
 
 
-    window.addEventListener('dragover', function(event){ // 編集画面へのドロップ制限
+    document.addEventListener('dragover', function(event){ // 編集画面へのドロップ制限
         event.preventDefault(); }, false);
 
-    window.addEventListener('drop', function(event){
+
+    document.addEventListener('drop', function(event){
         event.preventDefault();
         event.stopPropagation(); }, false);
 
 } // keeper()
+
 
 
 
@@ -192,16 +196,11 @@ function environ(){
         localStorage.setItem('AWriter_Preset', write_json); } // ローカルストレージ 保存
 
 
-
-    let p_images=document.querySelector('.p-images-imageList__body'); // 監視 target
-    let monitor1=new MutationObserver(pre_set);
-    monitor1.observe(p_images, {childList: true, subtree: true}); // 画像リストの変化を監視開始
-
-    function pre_set(){
-        photo_size();
-        picto_select1();
-        design_select();
-        calendar(); }
+    photo_size();
+    photo_pos();
+    picto_select();
+    design_select();
+    calendar();
 
 
 
@@ -216,7 +215,7 @@ function environ(){
 
 
 
-    function picto_select1(){
+    function picto_select(){
         let pict_nav=document.querySelectorAll('.js-pictograph-nav');
         let pict_button=document.querySelector('button[data-tab-content="pictograph"]');
         pict_button.onclick=function(){
@@ -228,18 +227,18 @@ function environ(){
         for(let k=0; k<pict_nav.length; k++){
             pict_nav[k].onclick=function(){
                 if(k==1){
-                    picto_select2(); } // 絵文字のパレットを記録に従って開く
-                storage_w(2, k); }}} // 履歴・絵文字の選択をローカルストレージ 保存
+                    picto_select_category(); } // 絵文字のパレット種を記録に従って開く
+                storage_w(2, k); }}} // 履歴・絵文字の選択をローカルストレージ保存
 
 
-    function picto_select2(){
+    function picto_select_category(){
         let pict_nav2=document.querySelectorAll('.js-pictograph-subNav');
         if(pict_nav2.length>0){
             pict_nav2[aw_preset[3]].click(); }
 
         for(let k=0; k<pict_nav2.length; k++){
             pict_nav2[k].onclick=function(){
-                storage_w(3, k); }}} // 絵文字のパレット選択をローカルストレージ 保存
+                storage_w(3, k); }}} // 絵文字のパレット種選択をローカルストレージ保存
 
 
 
@@ -252,20 +251,17 @@ function environ(){
 
         for(let k=0; k<design_nav.length; k++){
             design_nav[k].onclick=function(){
-                storage_w(7, k); }}} //「見出し・テキスト」の選択をローカルストレージ 保存
+                storage_w(7, k); }}} //「見出し・テキスト」の選択をローカルストレージ保存
 
 
-
-    let monitor2=new MutationObserver(photo_pos);
-    monitor2.observe(p_images, {childList: true, subtree: true}); // 画像リストの変化を監視開始
 
     function photo_pos(){
-        let item=document.querySelectorAll('.p-images-imageList__item');
-        for(let k=0; k<item.length; k++){
-            set_pos(k); }
+        let imageList=document.querySelector('#js-photos-imageList');
+        if(imageList){
+            imageList.addEventListener('mouseup', setting); }
 
-        function set_pos(k){ // 画像の挿入時に配置指定を実行
-            item[k].addEventListener('mouseup', function(){
+        function setting(event){
+            if(event.target.classList.contains('p-images-imageList__item')){
                 let editor_iframe=document.querySelector('.cke_wysiwyg_frame');
                 if(editor_iframe){ // iframe読込みが実行条件
                     let iframe_doc=editor_iframe.contentWindow.document;
@@ -279,59 +275,74 @@ function environ(){
                                 post_img_p.setAttribute("style", "text-align: right;"); }}
                     }, 10);
 
-                    setTimeout(()=>{
-                        dialogue(); }, 20); }}); } // set_pos()
+                }}} // setting()
 
     } // photo_pos()
 
 
 
-    let target3=document.getElementById('cke_1_contents'); // 監視 target
-    let monitor3=new MutationObserver(dialogue);
-    monitor3.observe(target3, {childList: true}); // ショートカット待受け開始
+    let monitor=new MutationObserver((mutations)=>{
+        for(let mutation of mutations){
+            mutation.addedNodes.forEach((node)=>{
+                if(node.id==='js-ck-imgBalloon'){
+                    get_set(node);
+                }}); }});
 
-    dialogue();
+    monitor.observe(document.body, {childList: true}); // 画像ダイアログの表示を監視
 
-    function dialogue(){
+
+
+    function get_set(node){ // 画像ダイアログのサイズ・位置選択を取得
+        let size_button=node.querySelectorAll('.js-image-size-button');
+        for(let k=0; k<size_button.length; k++){
+            size_button[k].onmouseup=function(){
+                storage_w(0, k); // サイズ選択をローカルストレージ 保存
+                photo_size(); }} // 右パレットのサイズボタンを押す
+
+        let pos_button=node.querySelectorAll('.ck-imgJustify');
+        for(let k=0; k<pos_button.length; k++){
+            pos_button[k].onmouseup=function(){
+                if(pos_button[k].classList.contains('ck-imgJustify--active')!=true){
+                    storage_w(1, k); } // 位置選択をローカルストレージ 保存
+                else {
+                    storage_w(1, 0); }}} // 位置リセットをローカルストレージ 保存
+
+        get_order_size(node); // カスタム画像幅を取得
+
+    } // get_set()
+
+
+
+    let target0=document.getElementById('cke_1_contents'); // 監視 target
+    let monitor0=new MutationObserver(custom_size);
+    monitor0.observe(target0, {childList: true}); //「Ctrl+Click」待受け開始
+
+    custom_size();
+
+    function custom_size(){
         let editor_iframe=document.querySelector('.cke_wysiwyg_frame');
         if(editor_iframe){ // iframe読込みが実行条件
             let iframe_doc=editor_iframe.contentWindow.document;
-            let post_img=iframe_doc.querySelectorAll('.cke_editable img[src*="/user_images/"]');
-            for(let k=0; k<post_img.length; k++){
-                post_img[k].addEventListener('click', function(event){
-                    if(!event.ctrlKey){
-                        setTimeout(()=>{
-                            get_set(); }, 20); }
-
-                    if(event.ctrlKey){ // 画像を「Ctrl+Click」
-                        event.stopImmediatePropagation();
-                        setTimeout(()=>{
-                            set_order_size(post_img[k]); // 画像指定幅を設定
-                        }, 20); }
-                }); }
-
-            function get_set(){ // 画像ダイアログのサイズ・位置選択を取得
-                let size_button=document.querySelectorAll('.js-image-size-button');
-                for(let k=0; k<size_button.length; k++){
-                    size_button[k].addEventListener('mouseup', function(){
-                        storage_w(0, k); // サイズ選択をローカルストレージ 保存
-                        photo_size(); }); } // 右パレットのサイズボタンを押す
-
-                let pos_button=document.querySelectorAll('.ck-imgJustify');
-                for(let k=0; k<pos_button.length; k++){
-                    pos_button[k].addEventListener('mouseup', function(){
-                        if(pos_button[k].classList.contains('ck-imgJustify--active')!=true){
-                            storage_w(1, k); } // 位置選択をローカルストレージ 保存
-                        else {
-                            storage_w(1, 0); }}); } // 位置リセットをローカルストレージ 保存
-
-                get_order_size(); // カスタム画像幅を取得
-            } // get_set()
-        }} // dialogue()
+            if(iframe_doc){
+                if(!iframe_doc[c_size]){
+                    iframe_doc.addEventListener('click', is_img, true);
+                    iframe_doc[c_size]="true"; }
 
 
-    function get_order_size(){
-        let imageeditWidth=document.querySelector('#js-imageeditWidth');
+                function is_img(event){
+                    if(event.ctrlKey){
+                        if(event.target.tagName==='IMG'){
+                            event.stopImmediatePropagation();
+                            set_order_size(event.target); }}}
+
+            }} // if(editor_iframe)
+
+    } // custom_size()
+
+
+
+    function get_order_size(node){
+        let imageeditWidth=node.querySelector('#js-imageeditWidth');
         if(imageeditWidth){
             imageeditWidth.focus(); // 「Ctrl」キーでダイアログが消えるのを防ぐ
             imageeditWidth.onclick=(event)=>{
@@ -489,9 +500,9 @@ function environ(){
 
 function keep_left(){
 
-    let target4=document.getElementById('cke_1_contents'); // 監視 target
-    let monitor4=new MutationObserver(align_left);
-    monitor4.observe(target4, {childList: true}); // ショートカット待受け開始
+    let target1=document.getElementById('cke_1_contents'); // 監視 target
+    let monitor1=new MutationObserver(align_left);
+    monitor1.observe(target1, {childList: true}); //「Enter」キー待受け開始
 
     align_left();
 
@@ -502,7 +513,10 @@ function keep_left(){
             let iframe_body=iframe_doc.querySelector('body.cke_editable');
             iframe_doc.execCommand('defaultParagraphSeparator', false, 'p')
 
-            iframe_doc.addEventListener("keydown", check_key);
+            if(!iframe_doc[k_left]){
+                iframe_doc.addEventListener("keydown", check_key);
+                iframe_doc[k_left]="true"; }
+
             function check_key(event){
                 if(event.keyCode==13){ //「Enter」キー入力
                     setTimeout(()=>{
@@ -530,9 +544,9 @@ function step_size(){
     if(agent.indexOf('firefox') > -1){ ua_n=3; } // Firefoxの場合
     */
 
-    let target5=document.getElementById('cke_1_contents'); // 監視 target
-    let monitor5=new MutationObserver(flex_edit);
-    monitor5.observe(target5, {childList: true}); // ショートカット待受け開始
+    let target2=document.getElementById('cke_1_contents'); // 監視 target
+    let monitor2=new MutationObserver(flex_edit);
+    monitor2.observe(target2, {childList: true}); // キー入力待受け開始
 
     flex_edit();
 
@@ -545,12 +559,18 @@ function step_size(){
         let tags;
         let insert_node;
 
+
         editor_iframe=document.querySelector('.cke_wysiwyg_frame');
         if(editor_iframe){
             iframe_doc=editor_iframe.contentWindow.document;
             if(iframe_doc){
-                iframe_doc.addEventListener('keydown', check_key);
+                if(!iframe_doc[s_size]){
+                    iframe_doc.addEventListener('keydown', check_key);
+                    iframe_doc[s_size]="true"; }
+
+                document.removeEventListener('keydown', check_key);
                 document.addEventListener('keydown', check_key);
+
 
                 function check_key(event){
                     //    disp_tag(); // 取得range状態のチェック用 ●
@@ -869,7 +889,6 @@ function photo_list(){
                 }}}); }
 
 
-
     let editor_iframe=document.querySelector('.cke_wysiwyg_frame');
     if(editor_iframe){
         let iframe_doc=editor_iframe.contentWindow.document;
@@ -877,6 +896,7 @@ function photo_list(){
             iframe_doc.addEventListener('keydown', esc_key); }}
 
     document.addEventListener('keydown', esc_key);
+
     function esc_key(event){
         if(event.keyCode==27){ //「ESC」キー入力
             let EKI=document.querySelector('#EKI');
