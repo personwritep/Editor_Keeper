@@ -326,7 +326,7 @@ function environ(){
             if(iframe_doc){
                 if(!iframe_doc[c_size]){
                     iframe_doc.addEventListener('click', is_img, true);
-                    iframe_doc[c_size]="true"; }
+                    iframe_doc[c_size]=true; }
 
 
                 function is_img(event){
@@ -515,7 +515,7 @@ function keep_left(){
 
             if(!iframe_doc[k_left]){
                 iframe_doc.addEventListener("keydown", check_key);
-                iframe_doc[k_left]="true"; }
+                iframe_doc[k_left]=true; }
 
             function check_key(event){
                 if(event.keyCode==13){ //「Enter」キー入力
@@ -566,7 +566,7 @@ function step_size(){
             if(iframe_doc){
                 if(!iframe_doc[s_size]){
                     iframe_doc.addEventListener('keydown', check_key);
-                    iframe_doc[s_size]="true"; }
+                    iframe_doc[s_size]=true; }
 
                 document.removeEventListener('keydown', check_key);
                 document.addEventListener('keydown', check_key);
