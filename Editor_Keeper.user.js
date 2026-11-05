@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name        Editor Keeper ⭐📛
 // @namespace        http://tampermonkey.net/
-// @version        5.3
+// @version        5.4
 // @description        編集画面を閉じず「管理トップ」「ブログトップ」に移動する
 // @author        Ameblo Writer User
 // @match        https://blog.ameba.jp/ucs/entry/srventryinsertinput.do*
@@ -560,226 +560,231 @@ function step_size(){
         let insert_node;
 
 
+        if(!document[s_size]){
+            document.addEventListener('keydown', check_key);
+            document[s_size]=true; }
+
         editor_iframe=document.querySelector('.cke_wysiwyg_frame');
         if(editor_iframe){
             iframe_doc=editor_iframe.contentWindow.document;
             if(iframe_doc){
                 if(!iframe_doc[s_size]){
                     iframe_doc.addEventListener('keydown', check_key);
-                    iframe_doc[s_size]=true; }
-
-                document.removeEventListener('keydown', check_key);
-                document.addEventListener('keydown', check_key);
+                    iframe_doc[s_size]=true; }}}
 
 
-                function check_key(event){
-                    //    disp_tag(); // 取得range状態のチェック用 ●
+        function check_key(event){
+            //    disp_tag(); // 取得range状態のチェック用 ●
 
-                    if(event.ctrlKey){
-                        if(event.keyCode==13){ //「Ctrl+Enter」
-                            event.preventDefault();
-                            if(check_tag()==0){
-                                creat_super(); }
-                            else if(check_tag()==1){
-                                more(event.ctrlKey, event.keyCode); }}
+            if(event.ctrlKey){
+                if(event.keyCode==13){ //「Ctrl+Enter」
+                    event.preventDefault();
+                    if(check_tag()==0){
+                        creat_super(); }
+                    else if(check_tag()==1){
+                        more(event.ctrlKey, event.keyCode); }}
 
-                        else if(event.keyCode==38){ //「Ctrl+⇧」
-                            event.preventDefault();
-                            event.stopImmediatePropagation();
-                            if(check_tag()==0){
-                                first(event.ctrlKey, event.keyCode); }
-                            else if(check_tag()==1){
-                                more(event.ctrlKey, event.keyCode); }
-                            else if(check_tag()==ua_n){
-                                more2(event.ctrlKey, event.keyCode); }}
+                else if(event.keyCode==38){ //「Ctrl+⇧」
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    if(check_tag()==0){
+                        first(event.ctrlKey, event.keyCode); }
+                    else if(check_tag()==1){
+                        more(event.ctrlKey, event.keyCode); }
+                    else if(check_tag()==ua_n){
+                        more2(event.ctrlKey, event.keyCode); }}
 
-                        else if(event.keyCode==40){ //「Ctrl+⇩」
-                            event.preventDefault();
-                            event.stopImmediatePropagation();
-                            if(check_tag()==0){
-                                first(event.ctrlKey, event.keyCode); }
-                            else if(check_tag()==1){
-                                more(event.ctrlKey, event.keyCode); }
-                            else if(check_tag()==ua_n){
-                                more2(event.ctrlKey, event.keyCode); }}}
+                else if(event.keyCode==40){ //「Ctrl+⇩」
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    if(check_tag()==0){
+                        first(event.ctrlKey, event.keyCode); }
+                    else if(check_tag()==1){
+                        more(event.ctrlKey, event.keyCode); }
+                    else if(check_tag()==ua_n){
+                        more2(event.ctrlKey, event.keyCode); }}}
 
-                    else if(event.altKey){
-                        if(event.keyCode==37){ //「Alt+⇦」を無効化
-                            event.preventDefault(); }
+            else if(event.altKey){
+                if(event.keyCode==37){ //「Alt+⇦」を無効化
+                    event.preventDefault(); }
 
-                        else if(event.keyCode==38){ //「Alt+⇧」
-                            event.preventDefault();
-                            event.stopImmediatePropagation();
-                            if(check_tag()==0){
-                                first(event.altKey, event.keyCode); }
-                            else if(check_tag()==1){
-                                more(event.altKey, event.keyCode); }
-                            else if(check_tag()==ua_n){
-                                more2(event.altKey, event.keyCode); }}
+                else if(event.keyCode==38){ //「Alt+⇧」
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    if(check_tag()==0){
+                        first(event.altKey, event.keyCode); }
+                    else if(check_tag()==1){
+                        more(event.altKey, event.keyCode); }
+                    else if(check_tag()==ua_n){
+                        more2(event.altKey, event.keyCode); }}
 
-                        else if(event.keyCode==40){ //「Alt+⇩」
-                            event.preventDefault();
-                            event.stopImmediatePropagation();
-                            if(check_tag()==0){
-                                first(event.altKey, event.keyCode); }
-                            else if(check_tag()==1){
-                                more(event.altKey, event.keyCode); }
-                            else if(check_tag()==ua_n){
-                                more2(event.altKey, event.keyCode); }}}
+                else if(event.keyCode==40){ //「Alt+⇩」
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    if(check_tag()==0){
+                        first(event.altKey, event.keyCode); }
+                    else if(check_tag()==1){
+                        more(event.altKey, event.keyCode); }
+                    else if(check_tag()==ua_n){
+                        more2(event.altKey, event.keyCode); }}}
 
 
-                    function check_tag(){
-                        selection=iframe_doc.getSelection();
-                        range=selection.getRangeAt(0);
-                        clone=selection.getRangeAt(0).cloneContents();
-                        tags=clone.querySelectorAll(
-                            'span, p, a, b, br, div, em, h1, h2, h3, h4, i, img, s');
-                        if(range.collapsed){
-                            return -1; } // 選択範囲が無い時は動作しない
-                        else{
-                            return tags.length; }}
-                    /*
+            function check_tag(){
+                editor_iframe=document.querySelector('.cke_wysiwyg_frame');
+                if(editor_iframe){
+                    iframe_doc=editor_iframe.contentWindow.document;
+                    selection=iframe_doc.getSelection();
+                    range=selection.getRangeAt(0);
+                    clone=selection.getRangeAt(0).cloneContents();
+                    tags=clone.querySelectorAll(
+                        'span, p, a, b, br, div, em, h1, h2, h3, h4, i, img, s');
+                    if(range.collapsed){
+                        return -1; } // 選択範囲が無い時は動作しない
+                    else{
+                        return tags.length; }}}
+            /*
                     function disp_tag(){ // 取得range状態のチェック用 ●
                         let box=document.querySelector('#cke_8');
                         box.style.font="bold 16px/30px Meiryo";
                         box.innerHTML=check_tag(); }
                     */
 
-                } // check_key()
+        } // check_key()
 
 
-                function creat_super(){
-                    insert_node=iframe_doc.createElement('span');
-                    insert_node.setAttribute('style', 'vertical-align:super;'+
-                                             'line-height:0;font-size:0.8em');
+        function creat_super(){
+            insert_node=iframe_doc.createElement('span');
+            insert_node.setAttribute('style', 'vertical-align:super;'+
+                                     'line-height:0;font-size:0.8em');
 
-                    insert_node.textContent=range.toString();
-                    try{
-                        range.surroundContents(insert_node);
-                        disp_tag(insert_node); }
-                    catch(e){;}}
+            insert_node.textContent=range.toString();
+            try{
+                range.surroundContents(insert_node);
+                disp_tag(insert_node); }
+            catch(e){;}}
 
 
-                function first(ac, key){
-                    insert_node=iframe_doc.createElement('span');
+        function first(ac, key){
+            insert_node=iframe_doc.createElement('span');
+            if(ac==event.altKey){
+                if(key==38){ //「Alt+⇧」
+                    insert_node.setAttribute('style', 'font-size:1.1em'); }
+                else if(key==40){ //「Alt+⇩」
+                    insert_node.setAttribute('style', 'font-size:0.9em'); }}
+            else if(ac==event.ctrlKey){
+                if(key==38){ //「Ctrl+⇧」
+                    insert_node.setAttribute('style', 'font-size:1.1em;'+
+                                             'line-height:0;background:transparent;'); }
+                else if(key==40){ //「Ctrl+⇩」
+                    insert_node.setAttribute('style', 'font-size:0.9em;'+
+                                             'line-height:0;background:transparent;'); }}
+
+            insert_node.textContent=range.toString();
+            try{
+                range.surroundContents(insert_node);
+                disp_tag(insert_node); }
+            catch(e){;}}
+
+
+        function more(ac, key){
+            let span=clone.querySelector('span');
+            if(span){
+                let size_raw=span.style.getPropertyValue('font-size');
+                let vertical=span.style.getPropertyValue('vertical-align');
+
+                if(size_raw.indexOf('em')!=-1 && size_raw.indexOf('rem')==-1){
+                    let size=parseFloat(size_raw.replace(/[^0-9\.]/g, ''));
+                    if(key==38 && size<3){ //「⇧」
+                        size=Math.round((size+0.1)*10)/10; }
+                    else if(key==40 && size>0.3){ //「⇩」
+                        size=Math.round((size-0.1)*10)/10; }
+
+                    let size_css;
                     if(ac==event.altKey){
-                        if(key==38){ //「Alt+⇧」
-                            insert_node.setAttribute('style', 'font-size:1.1em'); }
-                        else if(key==40){ //「Alt+⇩」
-                            insert_node.setAttribute('style', 'font-size:0.9em'); }}
-                    else if(ac==event.ctrlKey){
-                        if(key==38){ //「Ctrl+⇧」
-                            insert_node.setAttribute('style', 'font-size:1.1em;'+
-                                                     'line-height:0;background:transparent;'); }
-                        else if(key==40){ //「Ctrl+⇩」
-                            insert_node.setAttribute('style', 'font-size:0.9em;'+
-                                                     'line-height:0;background:transparent;'); }}
+                        size_css='font-size:' +size+ 'em;';
+                        if(vertical){
+                            size_css +='vertical-align:super;'; }}
+                    else if(ac==event.ctrlKey && key!=13){
+                        size_css='font-size:' +size+ 'em;'+
+                            'line-height:0;background:transparent;';
+                        if(vertical){
+                            size_css +='vertical-align:super;'; }}
+                    else if(ac==event.ctrlKey && key==13){
+                        size_css='font-size:' +size+ 'em;'+
+                            'line-height:0;background:transparent;vertical-align:super;'; }
 
+                    insert_node=iframe_doc.createElement('span');
+                    insert_node.setAttribute('style', size_css);
                     insert_node.textContent=range.toString();
                     try{
-                        range.surroundContents(insert_node);
+                        range.deleteContents();
+                        range.insertNode(insert_node);
                         disp_tag(insert_node); }
-                    catch(e){;}}
+                    catch(e){;}}}
+
+            let br=clone.querySelector('br');
+            if(br){
+                more2(ac, key); }}
 
 
-                function more(ac, key){
-                    let span=clone.querySelector('span');
-                    if(span){
-                        let size_raw=span.style.getPropertyValue('font-size');
-                        let vertical=span.style.getPropertyValue('vertical-align');
+        function more2(ac, key){
+            if(range.startContainer.nodeType==Node.TEXT_NODE){
+                let latter=range.startContainer.splitText(range.startOffset);
+                range.setStartBefore(latter);
+                range.setEndAfter(latter);
 
-                        if(size_raw.indexOf('em')!=-1 && size_raw.indexOf('rem')==-1){
-                            let size=parseFloat(size_raw.replace(/[^0-9\.]/g, ''));
-                            if(key==38 && size<3){ //「⇧」
-                                size=Math.round((size+0.1)*10)/10; }
-                            else if(key==40 && size>0.3){ //「⇩」
-                                size=Math.round((size-0.1)*10)/10; }
+                insert_node=iframe_doc.createElement('span');
+                if(ac==event.altKey){
+                    if(key==38){
+                        insert_node.setAttribute('style', 'font-size:1.1em'); }
+                    else if(key==40){
+                        insert_node.setAttribute('style', 'font-size:0.9em'); }}
+                else if(ac==event.ctrlKey){
+                    if(key==38){
+                        insert_node.setAttribute('style', 'font-size:1.1em;'+
+                                                 'line-height:0;background:transparent;'); }
+                    else if(key==40){
+                        insert_node.setAttribute('style', 'font-size:0.9em;'+
+                                                 'line-height:0;background:transparent;'); }}
 
-                            let size_css;
-                            if(ac==event.altKey){
-                                size_css='font-size:' +size+ 'em;';
-                                if(vertical){
-                                    size_css +='vertical-align:super;'; }}
-                            else if(ac==event.ctrlKey && key!=13){
-                                size_css='font-size:' +size+ 'em;'+
-                                    'line-height:0;background:transparent;';
-                                if(vertical){
-                                    size_css +='vertical-align:super;'; }}
-                            else if(ac==event.ctrlKey && key==13){
-                                size_css='font-size:' +size+ 'em;'+
-                                    'line-height:0;background:transparent;vertical-align:super;'; }
-
-                            insert_node=iframe_doc.createElement('span');
-                            insert_node.setAttribute('style', size_css);
-                            insert_node.textContent=range.toString();
-                            try{
-                                range.deleteContents();
-                                range.insertNode(insert_node);
-                                disp_tag(insert_node); }
-                            catch(e){;}}}
-
-                    let br=clone.querySelector('br');
-                    if(br){
-                        more2(ac, key); }}
+                insert_node.textContent=range.toString();
+                try{
+                    range.surroundContents(insert_node);
+                    disp_tag(insert_node); }
+                catch(e){;}}}
 
 
-                function more2(ac, key){
-                    if(range.startContainer.nodeType==Node.TEXT_NODE){
-                        let latter=range.startContainer.splitText(range.startOffset);
-                        range.setStartBefore(latter);
-                        range.setEndAfter(latter);
+        function disp_tag(inserted_node){
+            let lineheight;
+            if(inserted_node.style.lineHeight=='0'){
+                lineheight='♦' }
+            else{
+                lineheight='　' }
+            let size=inserted_node.style.fontSize;
 
-                        insert_node=iframe_doc.createElement('span');
-                        if(ac==event.altKey){
-                            if(key==38){
-                                insert_node.setAttribute('style', 'font-size:1.1em'); }
-                            else if(key==40){
-                                insert_node.setAttribute('style', 'font-size:0.9em'); }}
-                        else if(ac==event.ctrlKey){
-                            if(key==38){
-                                insert_node.setAttribute('style', 'font-size:1.1em;'+
-                                                         'line-height:0;background:transparent;'); }
-                            else if(key==40){
-                                insert_node.setAttribute('style', 'font-size:0.9em;'+
-                                                         'line-height:0;background:transparent;'); }}
+            let cke_lavel;
+            if(ua_n==3){
+                cke_lavel=document.querySelector('#cke_6_text'); }
+            else{
+                cke_lavel=document.querySelector('#cke_7_text'); }
 
-                        insert_node.textContent=range.toString();
-                        try{
-                            range.surroundContents(insert_node);
-                            disp_tag(insert_node); }
-                        catch(e){;}}}
+            cke_lavel.textContent=lineheight + size;
+            cke_lavel.removeAttribute('id');
+            cke_lavel.parentNode.style.background='#2196f3';
+            cke_lavel.style.color='#fff';
 
+            setTimeout(()=>{
+                if(ua_n==3){
+                    cke_lavel.parentNode.style.background='';
+                    cke_lavel.style.color='';
+                    cke_lavel.setAttribute('id', 'cke_6_text'); }
+                else{
+                    cke_lavel.parentNode.style.background='';
+                    cke_lavel.style.color='';
+                    cke_lavel.setAttribute('id', 'cke_7_text'); }
+            }, 500); }
 
-                function disp_tag(inserted_node){
-                    let lineheight;
-                    if(inserted_node.style.lineHeight=='0'){
-                        lineheight='♦' }
-                    else{
-                        lineheight='　' }
-                    let size=inserted_node.style.fontSize;
-
-                    let cke_lavel;
-                    if(ua_n==3){
-                        cke_lavel=document.querySelector('#cke_6_text'); }
-                    else{
-                        cke_lavel=document.querySelector('#cke_7_text'); }
-
-                    cke_lavel.textContent=lineheight + size;
-                    cke_lavel.removeAttribute('id');
-                    cke_lavel.parentNode.style.background='#2196f3';
-                    cke_lavel.style.color='#fff';
-
-                    setTimeout(()=>{
-                        if(ua_n==3){
-                            cke_lavel.parentNode.style.background='';
-                            cke_lavel.style.color='';
-                            cke_lavel.setAttribute('id', 'cke_6_text'); }
-                        else{
-                            cke_lavel.parentNode.style.background='';
-                            cke_lavel.style.color='';
-                            cke_lavel.setAttribute('id', 'cke_7_text'); }
-                    }, 500); }
-            }}} // flex_edit()
+    } // flex_edit()
 
 } // step_size()
 
